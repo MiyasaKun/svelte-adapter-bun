@@ -1,0 +1,23 @@
+{
+    "name": "svelte-adapter-bun-ifd",
+    "version": "0.0.1",
+    "description": "Creates a standalone Bun server from a Sveltekit Project",
+    "keywords": [
+        "adapter",
+        "bun",
+        "svelte",
+        "sveltekit",
+        "hosting"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MiyasaKun/svelte-adapter-bun.git"
+    },
+    "license": "MIT",
+    "type": "module",
+    "author": "Tom Schoenborn <@MiyasaKun>",
+    "devDependencies": {
+        "@sveltejs/kit": "^2.21.0",
+        "bun-types": "^1.2.13"
+    }
+}
