@@ -2,4 +2,5 @@ node_modules
 .idx
 .DS_Store
 .vscode
-/example/*
+/test/*
+/src/certs/*

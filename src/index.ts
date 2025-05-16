@@ -1,16 +1,23 @@
-import { Serve } from "bun";
+import { Serve, serve } from "bun"
+import { readFileSync } from "node:fs";
+import { createSecureServer } from "node:http2";
+import { env } from "./env";
+import Stream from "node:stream";
 
-const { serve } = require("bun");
+const hostname = "0.0.0.0";
+const port = 3000;
+const development: boolean = true;
+const tls = [];
 
-const serverOptions: Serve = {
-    fetch(req: Request): Response | Promise<Response> {
-        const url = new URL(req.url);
-        if (url.pathname === "/") return new Response("Hello from Bun!", { status: 200 });
-        return new Response("Not Found", { status: 404 });
-    },
-    hostname: "0.0.0.0",
-    port: 3000,
-    
-}
-console.log("Server is running on ")
-serve(serverOptions)
+const Server = createSecureServer({
+    key: readFileSync(env("TLS_KEY", "./certs/key.pem")),
+    cert: readFileSync(env("TLS_CERT", "./certs/key.pem")),
+}, (req,res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.writeHead(200,{ 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('OK');
+});
+
+console.info(`Listening on ${hostname + ":" + port}`);
+
+Server.listen(port,hostname)

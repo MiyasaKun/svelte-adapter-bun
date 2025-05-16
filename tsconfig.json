@@ -1,9 +1,15 @@
 {
-    "compilerOptions": {
-        "lib": ["ESNext"],
-        "module": "ESNext",
-        "moduleResolution": "node",
-        "target": "ESNext",
-        "types": ["bun-types"]
-    }
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "types": ["@types/bun"],
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "skipDefaultLibCheck": true,
+    "declarationDir": "."
+  },
+  "include": ["src/*", "index.ts"],
+  "exclude": ["./node_modules/**", "./test/**"]
 }
