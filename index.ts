@@ -1,19 +1,30 @@
-import type { ServerOptions } from "./build";
-import type { Adapter } from '@sveltejs/kit';
+import { type Adapter } from "@sveltejs/kit";
+import { AdapterOptions, BuildOptions } from "./types";
+import { writeFileSync } from 'fs'
 
-/** @param {AdapterSpecificOptions} options */
-export default function (options:ServerOptions): Adapter {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
-        options,
-		name: 'svelte-adapter-bun',
-		async adapt(builder) {
-            const client_path = join(options.out, 'client');
-            const server_path = join(options.out, 'server');
+export default function ({
+	out = "build",
+	host = "0.0.0.0",
+	port = 3000
+}: AdapterOptions & BuildOptions = {}): Adapter{
+	return {
+		 name: "svelte-adapter-bun-ifd",
+		 async adapt( builder ){
+			builder.rimraf(out)
+			builder.mkdirp(out)
 
-            utils
+			builder.log.minor("Copying assets")
+			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`)
+			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`)
+			
+			builder.log.minor("Building Server")
+			builder.writeServer(`${out}/server`)
+		
+			writeFileSync(
+				`${out}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: "./server" })};\n\n` +
+				  `export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`,
+			  );
 		}
-	};
-
-	return adapter;
+	}
 }

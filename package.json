@@ -16,6 +16,15 @@
     "license": "MIT",
     "type": "module",
     "author": "Tom Schoenborn <@MiyasaKun>",
+    "main": "index",
+    "types": "types",
+    "exports": "./index",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "bun run build.ts"
+    },
     "devDependencies": {
         "@sveltejs/kit": "^2.21.0",
         "bun-types": "^1.2.13"
