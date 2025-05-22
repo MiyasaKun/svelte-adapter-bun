@@ -47,5 +47,8 @@
   },
   "engines": {
     "bun": "^1.1.17"
+  },
+  "dependencies": {
+    "sirv": "^3.0.1"
   }
 }
