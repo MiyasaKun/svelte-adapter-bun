@@ -1,13 +1,19 @@
 import { type Adapter } from "@sveltejs/kit";
-import { AdapterOptions, BuildOptions } from "./types";
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-const files = fileURLToPath(new URL("./files",import.meta.url).href);
+const files = fileURLToPath(new URL("./files", import.meta.url).href);
 
+export interface AdapterOptions {
+  envPrefix?: string;
+}
+export interface BuildOptions {
+  out?: string;
+}
 
 export default function ({
   out = "build",
+  envPrefix = "",
 }: AdapterOptions & BuildOptions = {}): Adapter {
   return {
     name: "bun-adapter",
@@ -28,17 +34,57 @@ export default function ({
           relativePath: "./server",
         })};\n\n` +
           `export const prerendered = new Set(${JSON.stringify(
-            builder.prerendered.paths
-          )});\n`
+            builder.prerendered.paths,
+          )});\n`,
       );
-      builder.copy(files,out,{
+      builder.copy(files, out, {
         replace: {
           __SERVER: "./server/index.js",
           __MANIFEST: "./manifest.js",
-          __ADAPTER_OPTIONS: JSON.stringify({}),
-        }
-      })
-    },
+          __ADAPTER_OPTIONS: JSON.stringify({
+            clientPath: `client${builder.config.kit.paths.base}`,
+            prerenderedPath: `prerendered${builder.config.kit.paths.base}`,
+            appDir: builder.config.kit.appDir // Typically '_app'
+          }),
+        },
+      });
 
+      const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+
+      let package_data = {
+        name: "bun-sveltekit-app",
+        version: "0.0.0",
+        type: "module",
+        private: true,
+        main: "index.js",
+        scripts: {
+          start: "bun ./index.js",
+        },
+        dependencies: {
+          cookie: "latest",
+          devalue: "latest",
+          "set-cookie-parser": "latest",
+        },
+      };
+
+      try {
+        pkg.name && (package_data.name = pkg.name);
+        pkg.version && (package_data.version = pkg.version);
+        pkg.dependencies &&
+          (package_data.dependencies = {
+            ...pkg.dependencies,
+            ...package_data.dependencies,
+          });
+      } catch (error) {
+        builder.log.warn(`Parse package.json error: ${error.message}`);
+      }
+
+      writeFileSync(
+        `${out}/package.json`,
+        JSON.stringify(package_data, null, "\t"),
+      );
+
+      builder.log.success(`Start server with: bun ./${out}/index.js`);
+    },
   };
 }

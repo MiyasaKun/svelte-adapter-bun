@@ -1,41 +1,56 @@
-import { Serve, serve, TLSOptions } from "bun"
+// filepath: c:\Users\TSc\Desktop\Aurigalis\svelte-adapter-bun\src\index.ts
 import { readFileSync } from "node:fs";
-import { createSecureServer, getDefaultSettings, Http2SecureServer, SecureServerOptions } from "node:http2";
-import { env } from "./env";
-import Stream from "node:stream";
-import { TlsOptions } from "node:tls";
+import { createSecureServer, constants as http2constants } from "node:http2";
+import { streamHandler } from "./handler"; // Assuming handler is in a separate file
 
-const hostname = "0.0.0.0";
-const port = 3000;
-const development: boolean = true;
-const tls: TlsOptions = {
-  key: readFileSync("/Users/tomschonborn/Desktop/dev/svelte-adapter-bun/certs/key.pem"),
-  cert: readFileSync("/Users/tomschonborn/Desktop/dev/svelte-adapter-bun/certs/certificate.pem"),
-}; 
-const options: SecureServerOptions = {
-  ...tls,
-  allowHTTP1: false,
-}
+// @ts-ignore - This placeholder is replaced by the adapter
+const ADAPTER_OPTIONS_PLACEHOLDER = "__ADAPTER_OPTIONS__";
+const adapterOptions = JSON.parse(ADAPTER_OPTIONS_PLACEHOLDER);
 
-const Server: Http2SecureServer = createSecureServer(options)
+const hostname = process.env.HOST || "0.0.0.0";
+const port = parseInt(process.env.PORT || "3000", 10);
+const development = adapterOptions.development;
 
-Server.on("stream", (stream, headers) => {
-  stream.respond({
-    ":status": 200,
-    "content-type": "text/html; charset=utf-8",
-  });
-  stream.end("<h1>Hello from Bun!</h1>");
+// TLS options (ensure cert paths are correct for the deployed app)
+// These paths should be relative to where the server runs (e.g., the 'build' directory)
+// or use absolute paths / environment variables for certs.
+const tlsOptions = {
+  key: readFileSync(process.env.TLS_KEY_PATH || "./cert/localhost-key.pem"),
+  cert: readFileSync(process.env.TLS_CERT_PATH || "./cert/localhost.pem"),
+};
+
+const serverOptions = {
+  ...tlsOptions,
+  allowHTTP1: false, // HTTP/2 only
+};
+
+const server = createSecureServer(serverOptions);
+
+server.on("stream", (stream, headers) => {
+  // Pass adapterOptions to streamHandler if it needs them directly,
+  // or handler can import and parse __ADAPTER_OPTIONS__ itself.
+  // For simplicity, handler.ts will also parse it.
+  streamHandler(stream, headers);
 });
 
-console.info(`Listening on ${hostname + ":" + port}`);
+server.on("error", (err) => {
+  console.error("Server error:", err);
+});
 
-if(development){
-    Server.on("error", (err) => {
-        console.error("Server error:", err);
-    });
-    Server.on("session",(session) => {
-        console.log("Session connected");
-    })
+if (development) {
+  server.on("session", (session) => {
+    console.log("HTTP/2 Session connected");
+    session.on("close", () => console.log("HTTP/2 Session closed"));
+    session.on("error", (err) => console.error("HTTP/2 Session error:", err));
+  });
 }
 
-Server.listen(port,hostname)
+server.listen(port, hostname, () => {
+  console.info(`Listening on https://${hostname}:${port} (HTTP/2)`);
+  if (development) {
+    console.log("Development mode: ON");
+    console.log("Adapter Options:", adapterOptions);
+  }
+});
+
+export { server };

@@ -1,10 +1,13 @@
 node_modules
+
 .idx
 .DS_Store
 .vscode
-/test/*
-/src/certs/*
-/certs/*
+/src/cert/*
+/cert/*
+
+**/*.js
+**/*.d.ts
 
 .env
 .env.*
