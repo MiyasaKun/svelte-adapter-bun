@@ -39,12 +39,9 @@ export default function ({
       );
       builder.copy(files, out, {
         replace: {
-          __SERVER: "./server/index.js",
-          __MANIFEST: "./manifest.js",
-          __ADAPTER_OPTIONS: JSON.stringify({
-            clientPath: `client${builder.config.kit.paths.base}`,
-            prerenderedPath: `prerendered${builder.config.kit.paths.base}`,
-            appDir: builder.config.kit.appDir // Typically '_app'
+          SERVER: "./server/index.js",
+          MANIFEST: "./manifest.js",
+          ADAPTER_OPTIONS: JSON.stringify({
           }),
         },
       });

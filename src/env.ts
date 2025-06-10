@@ -10,3 +10,5 @@ export function env(name: string, fallback: any): any {
 }
 
 const env_prefix: string = (adapter_options.envPrefix ?? "").toString();
+
+export const development: boolean = env("DEV", true)

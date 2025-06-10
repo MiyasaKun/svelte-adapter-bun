@@ -4,7 +4,7 @@ import { createSecureServer, constants as http2constants } from "node:http2";
 import { streamHandler } from "./handler"; // Assuming handler is in a separate file
 
 // @ts-ignore - This placeholder is replaced by the adapter
-const ADAPTER_OPTIONS_PLACEHOLDER = "__ADAPTER_OPTIONS__";
+const ADAPTER_OPTIONS_PLACEHOLDER = "ADAPTER_OPTIONS";
 const adapterOptions = JSON.parse(ADAPTER_OPTIONS_PLACEHOLDER);
 
 const hostname = process.env.HOST || "0.0.0.0";
@@ -24,33 +24,33 @@ const serverOptions = {
   allowHTTP1: false, // HTTP/2 only
 };
 
-const server = createSecureServer(serverOptions);
+const NodeServer = createSecureServer(serverOptions);
 
-server.on("stream", (stream, headers) => {
+NodeServer.on("stream", (stream, headers) => {
   // Pass adapterOptions to streamHandler if it needs them directly,
   // or handler can import and parse __ADAPTER_OPTIONS__ itself.
   // For simplicity, handler.ts will also parse it.
   streamHandler(stream, headers);
 });
 
-server.on("error", (err) => {
+NodeServer.on("error", (err) => {
   console.error("Server error:", err);
 });
 
 if (development) {
-  server.on("session", (session) => {
+  NodeServer.on("session", (session) => {
     console.log("HTTP/2 Session connected");
     session.on("close", () => console.log("HTTP/2 Session closed"));
     session.on("error", (err) => console.error("HTTP/2 Session error:", err));
   });
 }
 
-server.listen(port, hostname, () => {
-  console.info(`Listening on https://${hostname}:${port} (HTTP/2)`);
+NodeServer.listen(port, hostname, () => {
+  console.info(`Listening on https://localhost:${port} (HTTP/2)`);
   if (development) {
     console.log("Development mode: ON");
     console.log("Adapter Options:", adapterOptions);
   }
 });
 
-export { server };
+export { NodeServer };
